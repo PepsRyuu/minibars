@@ -38,7 +38,20 @@ The Minibars compile function accepts a template string and returns a function w
 <div>{{new Date()}}</div>
 ```
 
-Content between the braces are interpreted and evaluated as JavaScript and the result is added to the generated template.
+Content between the braces are interpreted and evaluated as JavaScript and the result is added to the generated template. 
+
+Note that the compiler will detect variables that are defined in the template, and will create a 'var' declaration for every one it detects.
+Some interfaces such as 'Date' and 'localStorage' are reserved so that they can be used safely in the template (see code for full list). Only common interfaces are reserved by the compiler.
+You can tell the compiler to not add 'var' declarations for custom variables by defining the following hint at the top of your template:
+
+```handlebars
+{{@globals myglobal, anotherglobal}}
+
+<div>
+    <p>{{myglobal}}</p>
+    <p>{{anotherglobal}}</p>
+</div>
+```
 
 ### \#if
 

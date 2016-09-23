@@ -8,12 +8,17 @@
     }
 }(this, function () {
 
+    var interfaces = ['Array', 'Date', 'Intl', 'JSON', 'Math', 'NaN', 'Number', 
+                      'Object', 'URL', 'document', 'window', 'history', 'innerHeight', 
+                      'innerWidth', 'localStorage', 'location', 'sessionStorage', 
+                      'unescape', 'encodeURI', 'encodeURIComponent', 'decodeURI', 
+                      'decodeURIComponent', 'escape', 'process', 'global'];
+
     var reserved = ['in', 'if', 'else', 'each',  
                     'for', 'false', 'true', 'function', 'instanceof',
                     'null', 'undefined', 'let', 'new', 'this', 'var', 'while'];
 
     function compile(content) {
-
         // Boilerplate code to prevent XSS vulnerabilities
         var escape = [
             'var _e = /[&<>"\'`=]/g;',
@@ -35,8 +40,20 @@
 
         var output = escape;
 
-        // Makes it easier to perform regex checks by removing the line-breaks
-        content = content.replace(/\n/g, '').replace(/\r/g, '');
+        // Makes it easier to perform regex checks by removing the line-breaks.
+        // In regards to the double quotes, this global escape will break any JavaScript expression
+        // which uses double quotes, which is why the JS expressions are unescaped before outputting.
+        content = content.replace(/\n/g, '').replace(/\r/g, '').replace(/"/g, '\\"');
+
+        // Custom global detection
+        var globals = [];
+        content = content.replace(/{{@globals (.*?)}}/, function (match, group) {
+            group.split(/,/g).forEach(function (name) {
+                name = name.trim();
+                globals.push(name);
+            });
+            return '';
+        }).trim();
 
         var detectedVariables = {};
 
@@ -54,8 +71,9 @@
                             (part.indexOf('\"') === -1) &&
                             (part.indexOf('#') === -1) &&
                             (part.indexOf('@') === -1) &&
+                            (globals.indexOf(part) === -1) &&
                             (reserved.indexOf(part) === -1) &&
-                            (!window[part]);
+                            (interfaces.indexOf(part) === -1);
 
                 if (valid) {
                     detectedVariables[part] = true;
@@ -70,7 +88,7 @@
         output += 'return "';
 
         content = content.replace(/{{#if (.*?)}}/g, function (match, cond) {
-            return '" + ((function () { if (' + cond + '){ return "';
+            return '" + ((function () { if (' + cond.replace(/\\"/g, '"') + '){ return "';
         });
 
         content = content.replace(/{{else}}/g, function () {
@@ -94,7 +112,7 @@
         });
 
         content = content.replace(/{{(.*?)}}/g, function (match, inner) {
-            return '" + escape(' + inner + ') + "';
+            return '" + escape(' + inner.replace(/\\"/g, '"') + ') + "';
         });  
 
         output += content + '"';

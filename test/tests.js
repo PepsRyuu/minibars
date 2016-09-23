@@ -50,11 +50,16 @@ describe('Minibars', function() {
             expect(result).to.equal('<div>true</div>');
         });
 
-        it ('should support using window objects in JavaScript expressions', function () {
+        it ('should support using global interfaces in JavaScript expressions', function () {
             var template = '<div>{{new Date().toLocaleDateString()}}</div>';
             var compiled = Minibars.compile(template);
             var result = compiled();
             expect(result).to.equal('<div>' + new Date().toLocaleDateString() + '</div>');
+
+            var template = '<div>{{Array.isArray(items)}}</div>';
+            var compiled = Minibars.compile(template);
+            var result = compiled({items: []});
+            expect(result).to.equal('<div>true</div>');
         });
 
         it ('should recognise JavaScript keywords', function () {
@@ -64,6 +69,25 @@ describe('Minibars', function() {
                 message: []
             });
             expect(result).to.equal('<div>true</div>');
+        });
+
+        it ('should allow dynamic global variable declarations', function () {
+            window.myglobalvariable = 'hello';
+            window.anotherglobal = 'world';
+
+            var template = [
+                '{{@globals myglobalvariable, anotherglobal}}',
+                '',
+                '<div>',
+                '   <p>{{myglobalvariable}}-{{anotherglobal}}</p>',
+                '</div>'
+            ].join('\n');
+
+            var compiled = Minibars.compile(template);
+            var result = compiled();
+            expect(result.replace(/ /g, '')).to.equal('<div><p>hello-world</p></div>');
+            delete window.myglobalvariable;
+            delete window.anotherglobal;
         });
     });
 
@@ -272,6 +296,42 @@ describe('Minibars', function() {
 
             expect(result.replace(/ /g, '')).to.equal('<div><p>truthy</p><p>truthy</p><p>falsey</p></div>');
         });
+
+
+        it ('Scenario 2 - Elements with attributes', function () {
+            var template = '<div class="lol">{{message}}</div>';
+            var compiled = Minibars.compile(template);
+            var result = compiled({message: 'hello'});
+            expect(result).to.equal('<div class="lol">hello</div>');
+        });
+
+        it ('Scenario 3 - Quotes in braces should not be escaped', function () {
+            var template = '<div class="lol">{{message.indexOf("hello") > -1}}</div>';
+            var compiled = Minibars.compile(template);
+            var result = compiled({message: 'hello world'});
+            expect(result).to.equal('<div class="lol">true</div>');
+        });
+
+        it ('Scenario 4 - Quotes in the text content of a tag', function () {
+            var template = '<div class="lol">"{{message}}"</div>';
+            var compiled = Minibars.compile(template);
+            var result = compiled({message: 'hello'});
+            expect(result).to.equal('<div class="lol">"hello"</div>');
+        });
+
+        it ('Scenario 5 - Double quotes all over the place!', function () {
+            var template = [
+                '<div class="lol">',
+                '   {{#if message.indexOf("\\"hello\\"") > -1}}',
+                '       <p>"{{message}}"</p>',
+                '   {{/if}}',
+                '</div>'
+            ].join('\n');
+
+            var compiled = Minibars.compile(template);
+            var result = compiled({message: "\"hello\""});
+            expect(result.replace(/ /g, '')).to.equal('<divclass="lol"><p>"&quot;hello&quot;"</p></div>');
+        })
     });
 
     
