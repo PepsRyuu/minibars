@@ -1,6 +1,6 @@
 {
     "name": "minibars",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "description": "Small dependency-free templating engine using Mustache syntax.",
     "main": "minibars.js",
     "scripts": {
