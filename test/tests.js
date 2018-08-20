@@ -89,6 +89,12 @@ describe('Minibars', function() {
             delete window.myglobalvariable;
             delete window.anotherglobal;
         });
+
+        it ('should not fail if there\'s no braces in the template', function () {
+            var template = '<div>Hello World</div>';
+            var compiled = Minibars.compile(template);
+            expect(compiled()).to.equal('<div>Hello World</div>');
+        });
     });
 
     describe('#if statement', function () {
@@ -273,6 +279,12 @@ describe('Minibars', function() {
             var template = '<div>{{message}}</div>';
             var compiled = Minibars.compile(template);
             expect(compiled({message: '<script>alert</script>'})).to.equal('<div>&lt;script&gt;alert&lt;/script&gt;</div>');
+        });
+
+        it ('should not escape if using triple braces', function () {
+            var template = '<div>{{{message}}}</div>';
+            var compiled = Minibars.compile(template);
+            expect(compiled({message: '<script>alert</script>'})).to.equal('<div><script>alert</script></div>');
         });
     })
 

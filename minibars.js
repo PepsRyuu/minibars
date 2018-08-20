@@ -57,7 +57,8 @@
 
         var detectedVariables = {};
 
-        var matches = content.match(/{{(.*?)}}/g);
+        var matches = content.match(/{{(.*?)}}/g) || [];
+
         matches.forEach(function (match) {
             var parts = match.match(/([.#'@"a-zA-Z_][a-zA-Z0-9_]+)/g);
             parts.forEach(function(part) {
@@ -110,6 +111,10 @@
         content = content.replace(/@index/g, function (match, inner) {
             return '_index';
         });
+
+        content = content.replace(/{{{(.*?)}}}/g, function (match, inner) {
+            return '" + ' + inner.replace(/\\"/g, '"') + ' + "';
+        });  
 
         content = content.replace(/{{(.*?)}}/g, function (match, inner) {
             return '" + escape(' + inner.replace(/\\"/g, '"') + ') + "';
