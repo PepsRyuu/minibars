@@ -10,7 +10,7 @@ node build-tasks.js test
 LICENSE=`cat LICENSE`
 rm -rf dist
 mkdir dist
-node node_modules/uglifyjs/bin/uglifyjs minibars.js \
+node node_modules/uglify-js/bin/uglifyjs minibars.js \
     -o dist/minibars.min.js \
     --mangle --compress \
     --preamble "/*${LICENSE}*/"
